@@ -7,7 +7,7 @@ import re, sys, os
 import numpy
 import theano
 from collections import defaultdict
-from edmonds_mst import * #edmonds import mst
+from .edmonds_mst import * #edmonds import mst
 
 OOV = '_OOV_'
 SEG = 'Segmentation'
@@ -49,7 +49,7 @@ def quick_gen_anno_from_json(infile, outfile):
 def sample_high_conf_predictions_PubMed(sent_file, pred_file, anno_file, num_samples):
     all_instances = load_high_conf_predictions(sent_file, anno_file, pred_file)
     for i, ins in enumerate(random.sample(all_instances, int(num_samples))):
-        print '\n'.join(gen_html_for_ins(ins, i))
+        print ('\n'.join(gen_html_for_ins(ins, i)))
 
 
 def statistics_open_extraction(sent_file, anno_file, pred_file, thresh):
@@ -75,9 +75,9 @@ def statistics_open_extraction(sent_file, anno_file, pred_file, thresh):
             single_gene_set.add(anno[3])
             if len(anno) > 4:
                 single_variant_set.add(anno[4])
-    print 'high confident instances numbers:', thresh, len(single_sent_set), len(multi_sent_set)
-    print 'single sentence distinct entities:', len(single_drug_set), len(single_gene_set), len(single_variant_set)
-    print 'multi-sentence distinct entities:', len(multi_drug_set), len(multi_gene_set), len(multi_variant_set)
+    print ('high confident instances numbers:', thresh, len(single_sent_set), len(multi_sent_set))
+    print ('single sentence distinct entities:', len(single_drug_set), len(single_gene_set), len(single_variant_set))
+    print ('multi-sentence distinct entities:', len(multi_drug_set), len(multi_gene_set), len(multi_variant_set))
 
 # Sample high-confident examples
 def sample_high_conf_predictions(sent_dir, pred_dir, num_folds, sent_file_name, anno_file_name, pred_file_prefix, thresh, num_samples):
@@ -104,9 +104,9 @@ def sample_high_conf_predictions(sent_dir, pred_dir, num_folds, sent_file_name, 
                 gold_array.append(0)
             else:
                 gold_array.append(1)
-        print len(pred_array), len(gold_array)
+        print (len(pred_array), len(gold_array))
         accuracies.append(eval_logitReg_accuracy(pred_array, gold_array))
-    print numpy.mean(accuracies)
+    print (numpy.mean(accuracies))
 
 
 def gen_html_for_ins(instance, num):
@@ -134,7 +134,7 @@ def load_high_conf_predictions(sentence_file, annotation_file, pred_file, thresh
                 instances.append([pl.strip(), al.strip(), sl.strip()])
     #for rel in single_sent_anno_set:
     #    print rel
-    print 'total distinct candidates for single sentence:', len(single_sent_anno_set), 'multiple sentences:', len(multi_sent_anno_set)
+    print ('total distinct candidates for single sentence:', len(single_sent_anno_set), 'multiple sentences:', len(multi_sent_anno_set))
     return instances
 
 # Generate chain-structure for the tree-LSTM implementation
@@ -142,7 +142,7 @@ def quick_chain(sentfile, outdepfile):
     with open(sentfile) as sf, open(outdepfile, 'w') as odf:
         for line in sf:
             content = line.strip().split('\t')[0]
-            dummy_dep = [(i+1) for i in xrange(len(content.lower().split(' ')))]
+            dummy_dep = [(i+1) for i in range(len(content.lower().split(' ')))]
             dummy_dep[-1] = -1
             odf.write(' '.join(map(str,dummy_dep))+'\n')
 
@@ -171,7 +171,7 @@ def quick_sample(sentfile, depfile):
         size = len(neg)
         pos_new = random.sample(pos, size)
         for p, n in zip(pos_new, neg):
-            print p, n
+            print (p, n)
             osf.write(contents[p])
             osf.write(contents[n])
             odf.write(deplabels[p])
@@ -184,12 +184,12 @@ def quick_check(train_file, dev_file):
     dev = load_text(dev_file)
     train_set = set(train)
     count = 0
-    print train[0]
-    print dev[0]
+    print (train[0])
+    print (dev[0])
     for line in dev:
         if line in train_set:
             count += 1
-    print count
+    print (count)
 
 def load_text(filename):
     content = []
@@ -197,7 +197,7 @@ def load_text(filename):
         for line in inf:
             #print line.split('\t')[0]
             content.append(line.strip().split('\t')[0])
-    print len(content)
+    print (len(content))
     return content
 
 # generate path and remove circle
@@ -227,7 +227,7 @@ def gen_path(path_dict):
 def gen_graph_from_paths(paths):
     path_graph = dict()
     node_pair_set = set()
-    print 'generate graph!!!'
+    print ('generate graph!!!')
     for path in paths:
         for node in path:
             pair = (node[0], node[1])
@@ -241,7 +241,7 @@ def gen_graph_from_paths(paths):
             value = (node[1], node[2])
             if value not in path_graph[node[0]]:
                 path_graph[node[0]].append(value)
-        print path_graph
+        print (path_graph)
     return path_graph
 
 
@@ -278,9 +278,9 @@ def topolgical_sort(graph_unsorted):
         acyclic = False
         sorted_nodes = set()
         for node, edges in graph_unsorted.items():
-            print 'processing node:', node, edges
+            print ('processing node:', node, edges)
             for edge, label in edges:
-                print 'processing edge:', node, edge
+                print ('processing edge:', node, edge)
                 if edge in graph_unsorted:
                     break
             else:
@@ -288,7 +288,7 @@ def topolgical_sort(graph_unsorted):
                 del graph_unsorted[node]
                 graph_sorted.append((node, edges))
                 sorted_nodes.add(node)
-                print 'graph_sorted:', graph_sorted
+                print ('graph_sorted:', graph_sorted)
         if not acyclic:
             # Uh oh, we've passed through all the unsorted nodes and
             # weren't able to resolve any of them, which means there
@@ -367,7 +367,7 @@ def gen_chain_shortest_paths(infile, outfile):
                 print topolgical_sort(path_graph)
                 ''' 
                 if len(paths) == 0:
-                    print 'no path!!!'
+                    print ('no path!!!')
                     ignored_item += 1
                     continue
                 path = gen_path(paths[0])
@@ -388,7 +388,7 @@ def gen_chain_shortest_paths(infile, outfile):
                         clean_path.append(idx)
                 outf.write(re.sub('\t', ' ', ' '.join(map(lambda x: origin_text[x], clean_path)))+'\t'+'\t'.join([' '.join(map(str, map(lambda x: clean_path.index(x),idx))) for idx in indices])+'\t'+relation+'\n')
                 #grf.write(' '.join(dep_arcs)+'\n')
-        print 'Ignored', ignored_item, 'items!'
+        print ('Ignored', ignored_item, 'items!')
 
 def filter_sentence_json(infile, outfile):
     import json
@@ -404,8 +404,8 @@ def filter_sentence_json(infile, outfile):
                 if len(sentences) == 1:
                     single_sent += 1
                     filtered_array.append(item)
-        outf.write(unicode(json.dumps(filtered_array, ensure_ascii=False)))
-        print 'total instances = ', total_ins, 'single sentence instances = ', single_sent
+        outf.write(numpy.unicode(json.dumps(filtered_array, ensure_ascii=False)))
+        print ('total instances = ', total_ins, 'single sentence instances = ', single_sent)
 
 def gen_graph_from_json(infile, outfile, graphfile):
     import json
@@ -748,7 +748,7 @@ def read_graph_dependencies(graph_file, arc_type_dict, fine_grain=True):
                     try:
                         assert len(temp) == 2
                     except:
-                        print elem, p
+                        print (elem, p)
             dep_graphs.append(construct_graph_deps(cur_deps, arc_type_dict, fine_grain))
     return dep_graphs, arc_type_dict 
 
@@ -846,9 +846,9 @@ def load_data_cv(data_dir, folds, dev_fold, test_fold=None, arc_type_dict=dict()
     for w in words:
         if w not in words2idx:
             words2idx[w] = len(words2idx)    
-    print 'voc_size:', len(words2idx)
+    print ('voc_size:', len(words2idx))
     if dep:
-        print 'arc_type_dict:', len(arc_type_dict), arc_type_dict
+        print ('arc_type_dict:', len(arc_type_dict), arc_type_dict)
     train_set_x, train_set_y, train_set_idx = [], [], [] 
     valid_set_x, valid_set_y, valid_set_idx = [], [], []
     test_set_x, test_set_y, test_set_idx = [], [], []
@@ -857,12 +857,12 @@ def load_data_cv(data_dir, folds, dev_fold, test_fold=None, arc_type_dict=dict()
         train_set_dep = []
         valid_set_dep = []
         test_set_dep = []
-        print 'load dependencies as well!!!'
+        print ('load dependencies as well!!!')
     else:
         train_set_dep, valid_set_dep, test_set_dep = None, None, None
     for i, (sub_corpus, dependencies) in enumerate(corpus):
         x, y, idx = sub_corpus
-        print 'check entity of subcorpus', i
+        print ('check entity of subcorpus', i)
         check_entity(x, idx)
         if i == dev_fold:
             collect_data(valid_set_x, valid_set_y, valid_set_idx, valid_set_dep, x, y, idx, dependencies, words2idx, arc_type_dict, dep, add)
@@ -870,8 +870,8 @@ def load_data_cv(data_dir, folds, dev_fold, test_fold=None, arc_type_dict=dict()
             collect_data(test_set_x, test_set_y, test_set_idx, test_set_dep, x, y, idx, dependencies, words2idx, arc_type_dict, dep, add)
         elif i != dev_fold:
             collect_data(train_set_x, train_set_y, train_set_idx, train_set_dep, x, y, idx, dependencies, words2idx, arc_type_dict, dep, add)
-    print 'after word to index, sizes:', len(train_set_x), len(valid_set_x), len(test_set_x) if test_fold is not None else 0
-    print 'arc_type_dict:', len(arc_type_dict) 
+    print ('after word to index, sizes:', len(train_set_x), len(valid_set_x), len(test_set_x) if test_fold is not None else 0)
+    print ('arc_type_dict:', len(arc_type_dict) )
     train = [train_set_x, train_set_y, train_set_idx]
     valid = [valid_set_x, valid_set_y, valid_set_idx]
     if test_fold is not None:
@@ -926,7 +926,7 @@ def read_file(filename, num_entities=2, labeled=True):
                 continue
             #sentence = stringQ2B(sentence)
             if len(x) < 1:
-                print x 
+                print (x)
                 continue
             if label == 'None':
                 y = 0
@@ -935,13 +935,13 @@ def read_file(filename, num_entities=2, labeled=True):
             corpus_x.append(x)
             corpus_y.append(y)
             corpus_idx.append(entity_id_arry)
-    print 'read file', filename, len(corpus_x), len(corpus_y), len(corpus_idx)
+    print ('read file', filename, len(corpus_x), len(corpus_y), len(corpus_idx))
     return corpus_x, corpus_y, corpus_idx 
 
 
 
 def load_data(train_path=None, valid_path=None, test_path=None, num_entities=2, dep=False, train_dep=None, valid_dep=None, test_dep=None, add=True):
-    print 'loading training data from', train_path, 'loading valid data from', valid_path, 'loading test data from', test_path
+    print ('loading training data from', train_path, 'loading valid data from', valid_path, 'loading test data from', test_path)
     corpus = []
     arc_type_dict = dict()
     # load training data
@@ -969,9 +969,9 @@ def load_data(train_path=None, valid_path=None, test_path=None, num_entities=2, 
     for w in words:
         if w not in words2idx:
             words2idx[w] = len(words2idx)    
-    print 'voc_size:', len(words2idx)
+    print ('voc_size:', len(words2idx))
     if dep:
-        print 'arc_type_dict:', len(arc_type_dict), arc_type_dict
+        print ('arc_type_dict:', len(arc_type_dict), arc_type_dict)
     train_set_x, train_set_y, train_set_idx = [], [], [] 
     valid_set_x, valid_set_y, valid_set_idx = [], [], []
     test_set_x, test_set_y, test_set_idx = [], [], []
@@ -980,19 +980,19 @@ def load_data(train_path=None, valid_path=None, test_path=None, num_entities=2, 
         train_set_dep = []
         valid_set_dep = []
         test_set_dep = []
-        print 'load dependencies as well!!!'
+        print ('load dependencies as well!!!')
     else:
         train_set_dep, valid_set_dep, test_set_dep = None, None, None
         #train_set_dep, valid_set_dep = None, None
     train_corpus, dev_corpus = corpus
     corp, dependencies = train_corpus
     x, y, idx = corp
-    print 'check entity of training data'
+    print ('check entity of training data')
     check_entity(x, idx)
     collect_data(train_set_x, train_set_y, train_set_idx, train_set_dep, x, y, idx, dependencies, words2idx, arc_type_dict, dep, add)
     corp, dependencies = dev_corpus
     x, y, idx = corp
-    print 'check entity of dev data'
+    print ('check entity of dev data')
     check_entity(x, idx)
     collect_data(valid_set_x, valid_set_y, valid_set_idx, valid_set_dep, x, y, idx, dependencies, words2idx, arc_type_dict, dep, add)
     train = [train_set_x, train_set_y, train_set_idx]
@@ -1029,4 +1029,4 @@ if __name__ == '__main__':
     train, valid, test, dics = load_data(train_path=sys.argv[1], valid_path=sys.argv[2], test_path=sys.argv[3])
     idx2word = dict((k, v) for v, k in dics['words2idx'].iteritems())
     for k,v in idx2word.iteritems():
-	print k,v
+	print (k,v)

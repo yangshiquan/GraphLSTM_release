@@ -249,9 +249,9 @@ class Chip(object):
         """
         self.name = name
         if params is not None:
-            print 'current chip:', name, 'out dimension:', self.kn('out_dim')
+            print ('current chip:', name, 'out dimension:', self.kn('out_dim'))
             self.out_dim = params[self.kn('out_dim')]
-            print 'init chip:', self.name, 'out dim:', self.out_dim
+            print ('init chip:', self.name, 'out dim:', self.out_dim)
             self.params = params
         return
 
@@ -265,7 +265,7 @@ class Chip(object):
         #print 'previous_chip out_dim:', previous_chip.out_dim, 'previous_chip window:', previous_chip.params[previous_chip.kn('win')]
         if hasattr(self.out_dim, '__call__'):
             self.out_dim = self.out_dim(self.in_dim)
-        print 'in prepend, chip', self.name, 'in dim =', self.in_dim, 'out dim =', self.out_dim
+        print ('in prepend, chip', self.name, 'in dim =', self.in_dim, 'out dim =', self.out_dim)
         self.parameters = []
         return self
 
@@ -324,9 +324,9 @@ class Embedding(Chip):
     def prepend(self, previous_chip):
         self = super(Embedding, self).prepend(previous_chip)
         if 'emb_matrix' in self.params:
-            print 'pre_trained embedding!!'
+            print ('pre_trained embedding!!')
             self.T_ = self.params['emb_matrix']
-            print self.T_, type(self.T_)
+            print (self.T_, type(self.T_))
         else:
             self.T_ = self._declare_mat('T', self.params['voc_size'], self.out_dim)
             self.params['emb_dim'] = self.out_dim
@@ -338,7 +338,7 @@ class Embedding(Chip):
     This requires a T_initializer
     """
     def compute(self, input_tv):
-        print input_tv, type(input_tv)
+        print (input_tv, type(input_tv))
         n_timesteps = input_tv.shape[0]
         window_size = 1
         if input_tv.ndim == 2:
@@ -346,15 +346,15 @@ class Embedding(Chip):
         elif input_tv.ndim == 3:
             batch_size = input_tv.shape[1]
             window_size = input_tv.shape[2]
-        print 'input_tv dimension:', input_tv.ndim
-        print 'window size = ', window_size
+        print ('input_tv dimension:', input_tv.ndim)
+        print ('window size = ', window_size)
         self.params[self.kn('win')] = window_size
         if input_tv.ndim < 3:
             self.output_tv = self.T_[input_tv.flatten()].reshape([n_timesteps, window_size * self.out_dim], ndim=2)
         else:
             self.output_tv = self.T_[input_tv.flatten()].reshape([n_timesteps, batch_size, window_size * self.out_dim], ndim=3)
         if self.params.get(self.kn('dropout_rate'), 0.0) != 0.0:
-            print 'DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')]
+            print ('DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')])
             self.output_tv = _dropout_from_layer(self.params['rng'], self.output_tv, self.params[self.kn('dropout_rate')])
         # Note: when we import the pre-defined emb_matrix, we do not add it to internal parameters because we already defined it as a regularizable parameter.
         #if 'emb_matrix' in self.params:
@@ -386,7 +386,7 @@ class Entity_attention(Chip):
             return attention_weights
 
     def compute(self, input_tv, entities_tv):
-        print 'in Entity_attention layer, input dimension:', input_tv.ndim
+        print ('in Entity_attention layer, input dimension:', input_tv.ndim)
         if input_tv.ndim == 3:
             self.attention_weights = T.zeros_like(input_tv[:, :, 0])
             self.att_wt_arry = T.zeros_like(input_tv[:,:,:3]).dimshuffle(2,0,1)
@@ -399,7 +399,7 @@ class Entity_attention(Chip):
             self.att_wt_arry = T.set_subtensor(self.att_wt_arry[i], temp_weight)
             self.attention_weights += temp_weight
         self.attention_weights = self.attention_weights / len(entities_tv)
-        print 'attention weight dimensions:', self.attention_weights.ndim
+        print ('attention weight dimensions:', self.attention_weights.ndim)
         if input_tv.ndim == 3:
             self.output_tv = input_tv * self.attention_weights[:, :, None]
         else:
@@ -547,7 +547,7 @@ class Convolutional_NN(Chip):
 class LSTM(Chip):
     def prepend(self, previous_chip):
         self = super(LSTM, self).prepend(previous_chip)
-        print 'lstm in dim:', self.in_dim, 'out dim:', self.out_dim
+        print ('lstm in dim:', self.in_dim, 'out dim:', self.out_dim)
         self.go_backwards = self.params[self.kn('go_backwards')]
         self.W = self._declare_mat('W', self.in_dim, 4*self.out_dim)
         self.U = self._declare_mat('U', self.out_dim, 4*self.out_dim)
@@ -616,7 +616,7 @@ class LSTM(Chip):
             lstm_step = __step_batch
             h_init = T.alloc(np_floatX(0.), n_samples, self.out_dim)
             c_init = T.alloc(np_floatX(0.), n_samples, self.out_dim)
-        print 'lstm step:', lstm_step
+        print ('lstm step:', lstm_step)
         rval, _ = theano.scan(lstm_step,
                               sequences=seq_in,
                               outputs_info=[h_init, c_init],
@@ -628,7 +628,7 @@ class LSTM(Chip):
         )
         self.output_tv = reverse(rval[0]) if self.go_backwards else rval[0]
         if self.params.get(self.kn('dropout_rate'), 0.0) != 0.0:
-            print 'DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')]
+            print ('DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')])
             self.output_tv = _dropout_from_layer(self.params['rng'], self.output_tv, self.params[self.kn('dropout_rate')])
 
     def needed_key(self):
@@ -638,7 +638,7 @@ class LSTM(Chip):
 class GraphLSTM(Chip):
     def prepend(self, previous_chip):
         self = super(GraphLSTM, self).prepend(previous_chip)
-        print 'graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim
+        print ('graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim)
         self.go_backwards = self.params[self.kn('go_backwards')]
         self.W = self._declare_mat('W', self.in_dim, 4*self.out_dim)
         self.U = self._declare_mat('U', self.out_dim, 4*self.out_dim)
@@ -735,7 +735,7 @@ class GraphLSTM(Chip):
             lstm_step = __step
             h_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
             c_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
-        print 'lstm step:', lstm_step
+        print ('lstm step:', lstm_step)
         rval, _ = theano.scan(lstm_step,
                               sequences=seq_in,
                               outputs_info=[h_init, c_init],
@@ -753,7 +753,7 @@ class GraphLSTM(Chip):
             #self.output_tv = reverse(rval[0][-1].T) if self.go_backwards else rval[0][-1].T
         #print 'in GraphLSTM, variable types:', input_tv.dtype, self.output_tv.dtype
         if self.params.get(self.kn('dropout_rate'), 0.0) != 0.0:
-            print 'DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')]
+            print ('DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')])
             self.output_tv = _dropout_from_layer(self.params['rng'], self.output_tv, self.params[self.kn('dropout_rate')])
 
     def needed_key(self):
@@ -805,7 +805,7 @@ class AutoEncoder(Chip):
 class GraphLSTM_WtdEmbMult(Chip):
     def prepend(self, previous_chip):
         self = super(GraphLSTM_WtdEmbMult, self).prepend(previous_chip)
-        print 'graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim
+        print ('graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim)
         self.go_backwards = self.params[self.kn('go_backwards')]
         self.W = self._declare_mat('W', self.in_dim, 4*self.out_dim)
         num_arc_types = self.params[self.kn('type_dim')]
@@ -915,7 +915,7 @@ class GraphLSTM_WtdEmbMult(Chip):
             lstm_step = __step
             h_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
             c_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
-        print 'lstm step:', lstm_step
+        print ('lstm step:', lstm_step)
         rval, _ = theano.scan(lstm_step,
                               sequences=seq_in,
                               outputs_info=[h_init, c_init],
@@ -933,7 +933,7 @@ class GraphLSTM_WtdEmbMult(Chip):
             #self.output_tv = reverse(rval[0][-1].T) if self.go_backwards else rval[0][-1].T
         #print 'in GraphLSTM, variable types:', input_tv.dtype, self.output_tv.dtype
         if self.params.get(self.kn('dropout_rate'), 0.0) != 0.0:
-            print 'DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')]
+            print ('DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')])
             self.output_tv = _dropout_from_layer(self.params['rng'], self.output_tv, self.params[self.kn('dropout_rate')])
 
     def needed_key(self):
@@ -943,7 +943,7 @@ class GraphLSTM_WtdEmbMult(Chip):
 class GraphLSTM_WtdAdd(Chip):
     def prepend(self, previous_chip):
         self = super(GraphLSTM_WtdAdd, self).prepend(previous_chip)
-        print 'graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim
+        print ('graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim)
         self.go_backwards = self.params[self.kn('go_backwards')]
         self.W = self._declare_mat('W', self.in_dim, 4*self.out_dim)
         num_arc_types = self.params[self.kn('type_dim')]
@@ -1049,7 +1049,7 @@ class GraphLSTM_WtdAdd(Chip):
             lstm_step = __step
             h_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
             c_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
-        print 'lstm step:', lstm_step
+        print ('lstm step:', lstm_step)
         rval, _ = theano.scan(lstm_step,
                               sequences=seq_in,
                               outputs_info=[h_init, c_init],
@@ -1067,7 +1067,7 @@ class GraphLSTM_WtdAdd(Chip):
             #self.output_tv = reverse(rval[0][-1].T) if self.go_backwards else rval[0][-1].T
         #print 'in GraphLSTM, variable types:', input_tv.dtype, self.output_tv.dtype
         if self.params.get(self.kn('dropout_rate'), 0.0) != 0.0:
-            print 'DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')]
+            print ('DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')])
             self.output_tv = _dropout_from_layer(self.params['rng'], self.output_tv, self.params[self.kn('dropout_rate')])
 
     def needed_key(self):
@@ -1077,7 +1077,7 @@ class GraphLSTM_WtdAdd(Chip):
 class GraphLSTM_Wtd(Chip):
     def prepend(self, previous_chip):
         self = super(GraphLSTM_Wtd, self).prepend(previous_chip)
-        print 'graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim
+        print ('graph lstm in dim:', self.in_dim, 'out dim:', self.out_dim)
         self.go_backwards = self.params[self.kn('go_backwards')]
         self.W = self._declare_mat('W', self.in_dim, 4*self.out_dim)
         num_arc_types = self.params[self.kn('arc_types')]
@@ -1177,7 +1177,7 @@ class GraphLSTM_Wtd(Chip):
             lstm_step = __step
             h_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
             c_init = T.alloc(np_floatX(0.), self.out_dim, n_steps)
-        print 'lstm step:', lstm_step
+        print ('lstm step:', lstm_step)
         rval, _ = theano.scan(lstm_step,
                               sequences=seq_in,
                               outputs_info=[h_init, c_init],
@@ -1195,7 +1195,7 @@ class GraphLSTM_Wtd(Chip):
             #self.output_tv = reverse(rval[0][-1].T) if self.go_backwards else rval[0][-1].T
         #print 'in GraphLSTM, variable types:', input_tv.dtype, self.output_tv.dtype
         if self.params.get(self.kn('dropout_rate'), 0.0) != 0.0:
-            print 'DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')]
+            print ('DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')])
             self.output_tv = _dropout_from_layer(self.params['rng'], self.output_tv, self.params[self.kn('dropout_rate')])
 
     def needed_key(self):
@@ -1205,7 +1205,7 @@ class GraphLSTM_Wtd(Chip):
 class BiLSTM(Chip):
     def __init__(self, name, params=None):
         super(BiLSTM, self).__init__(name, params)
-        print 'print bilstm parameters:', self.params
+        print ('print bilstm parameters:', self.params)
         self.params[self.name+"_forward_go_backwards"] = False
         self.params[self.name+"_backward_go_backwards"] = True
         self.params[self.name+"_forward_out_dim"] = params[self.kn('out_dim')]
@@ -1232,7 +1232,7 @@ class BiLSTM(Chip):
         # With mini-batch, the shape is (sent_len, num_sample, hidden_dim)
         self.output_tv = T.concatenate([self.forward_chip.output_tv, self.backward_chip.output_tv], axis=-1)
         if self.params.get(self.kn('dropout_rate'), 0.0) != 0.0:
-            print 'DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')]
+            print ('DROP OUT!!! at circuite', self.name, 'Drop out rate: ', self.params[self.kn('dropout_rate')])
             self.output_tv = _dropout_from_layer(self.params['rng'], self.output_tv, self.params[self.kn('dropout_rate')])
         #self.out_dim = self.forward_chip.out_dim + self.backward_chip.out_dim
 
@@ -1243,7 +1243,7 @@ class BiLSTM(Chip):
 class BiGraphLSTM(BiLSTM):
     def __init__(self, name, params=None):
         super(BiGraphLSTM, self).__init__(name, params)
-        print 'print bi-graph-lstm parameters:', self.params
+        print ('print bi-graph-lstm parameters:', self.params)
         self.params[self.name+"_forward_go_backwards"] = False
         self.params[self.name+"_backward_go_backwards"] = True
         self.params[self.name+"_forward_out_dim"] = params[self.kn('out_dim')]
@@ -1256,7 +1256,7 @@ class BiGraphLSTM(BiLSTM):
 class BiGraphLSTM_Wtd(BiLSTM):
     def __init__(self, name, params=None):
         super(BiGraphLSTM_Wtd, self).__init__(name, params)
-        print 'print bi-weighted-graph-lstm parameters:', self.params
+        print ('print bi-weighted-graph-lstm parameters:', self.params)
         self.params[self.name+"_forward_go_backwards"] = False
         self.params[self.name+"_backward_go_backwards"] = True
         self.params[self.name+"_forward_out_dim"] = params[self.kn('out_dim')]
@@ -1271,7 +1271,7 @@ class BiGraphLSTM_Wtd(BiLSTM):
 class BiGraphLSTM_WtdAdd(BiLSTM):
     def __init__(self, name, params=None):
         super(BiGraphLSTM_WtdAdd, self).__init__(name, params)
-        print 'print bi-weighted-graph-lstm parameters:', self.params
+        print ('print bi-weighted-graph-lstm parameters:', self.params)
         self.params[self.name+"_forward_go_backwards"] = False
         self.params[self.name+"_backward_go_backwards"] = True
         self.params[self.name+"_forward_out_dim"] = params[self.kn('out_dim')]
@@ -1288,7 +1288,7 @@ class BiGraphLSTM_WtdAdd(BiLSTM):
 class BiGraphLSTM_WtdEmbMult(BiLSTM):
     def __init__(self, name, params=None):
         super(BiGraphLSTM_WtdEmbMult, self).__init__(name, params)
-        print 'print bi-weighted-graph-lstm parameters:', self.params
+        print ('print bi-weighted-graph-lstm parameters:', self.params)
         self.params[self.name+"_forward_go_backwards"] = False
         self.params[self.name+"_backward_go_backwards"] = True
         self.params[self.name+"_forward_out_dim"] = params[self.kn('out_dim')]

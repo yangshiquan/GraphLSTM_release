@@ -13,9 +13,9 @@ import theano.tensor as T
 import numpy as np
 import random
 import warnings
-import cPickle as pickle
+import pickle as pickle
 from theano import config
-from neural_lib import ArrayInit
+from .neural_lib import ArrayInit
 
 def np_floatX(data):
     return np.asarray(data, dtype=config.floatX)
@@ -96,7 +96,7 @@ def read_matrix_from_pkl(fn, dic):
             M[idx] = (r/np.linalg.norm(r)) * multiplier
         else:
             not_in_dict += 1
-    print 'load embedding! %d words, %d not in the dictionary. Dictionary size: %d' %(len(voc), not_in_dict, len(dic))
+    print ('load embedding! %d words, %d not in the dictionary. Dictionary size: %d' %(len(voc), not_in_dict, len(dic)))
     return M
 
 def batch_run_func(corpora, func, *parameters ):
@@ -128,8 +128,8 @@ def read_matrix_from_gzip(fn, dic):
             else:
                 not_in_dict += 1
             line_count += 1
-    print 'load embedding! %s words, %d not in the dictionary. Dictionary size: %d' %(row, not_in_dict, len(dic))
-    print 'embedding matrix shape:', M.shape, 'word map size:', len(idx_map)
+    print ('load embedding! %s words, %d not in the dictionary. Dictionary size: %d' %(row, not_in_dict, len(dic)))
+    print ('embedding matrix shape:', M.shape, 'word map size:', len(idx_map))
     return M, idx_map 
 
 
@@ -154,8 +154,8 @@ def read_matrix_from_file(fn, dic, ecd='utf-8'):
             else:
                 not_in_dict += 1
             line_count += 1
-    print 'load embedding! %s words, %d not in the dictionary. Dictionary size: %d' %(row, not_in_dict, len(dic))
-    print 'embedding matrix shape:', M.shape, 'word map size:', len(idx_map)
+    print ('load embedding! %s words, %d not in the dictionary. Dictionary size: %d' %(row, not_in_dict, len(dic)))
+    print ('embedding matrix shape:', M.shape, 'word map size:', len(idx_map))
     return M, idx_map 
 
 def read_matrix_and_idmap_from_file(fn, dic=dict(), ecd='utf-8'):
@@ -174,7 +174,7 @@ def read_matrix_and_idmap_from_file(fn, dic=dict(), ecd='utf-8'):
             if elems[0] not in idx_map:
                 idx_map[elems[0]] = len(idx_map) 
                 not_in_dict += 1
-        print 'load embedding! %s words, %d not in the dictionary. Dictionary size: %d' %(row, not_in_dict, len(dic))
+        print ('load embedding! %s words, %d not in the dictionary. Dictionary size: %d' %(row, not_in_dict, len(dic)))
         assert len(idx_map) == len(dic) + not_in_dict
         M = ArrayInit(ArrayInit.onesided_uniform, multiplier=1.0/dim).initialize(len(idx_map)+2, dim) #*2)
         for elems in content:
@@ -185,8 +185,8 @@ def read_matrix_and_idmap_from_file(fn, dic=dict(), ecd='utf-8'):
                 r = np.array([float(_e) for _e in vec_elem])
                 M[idx,:dim] = (r/np.linalg.norm(r)) * multiplier 
             else:
-                print 'error in load embedding matrix!!' 
-    print 'embedding matrix shape:', M.shape, 'word map size:', len(idx_map)
+                print ('error in load embedding matrix!!')
+    print ('embedding matrix shape:', M.shape, 'word map size:', len(idx_map))
     return M, idx_map 
 
 
@@ -317,7 +317,7 @@ def sgd(lr, tparams, grads, cost, prefix, *input_params): #x_f, x_w, y,
     #print 'in sgd, input:', input_params
     #print true_grad
     assert len(true_grad) == len(grads)
-    print 'prefix=', prefix, 'input params:', input_params
+    print ('prefix=', prefix, 'input params:', input_params)
     f_cost = theano.function(list(input_params),
             cost, #att_wts, etv],
             updates=[(tg, g) for tg, g in zip(true_grad, grads)],
@@ -500,7 +500,7 @@ def create_relation_circuit(_args, StackConfig):
         inputs = idx_arr + [x_w, y]
         pred_inputs = [x_w] + idx_arr
     if _args.verbose == 2:
-        print "\n", "Printing Configuration after StackConfig:"
+        print ("\n", "Printing Configuration after StackConfig:")
         print_args(cargs)
     lr = T.scalar('lr')
     # need to refactor: all the build_optimizer and optimizers
@@ -520,7 +520,7 @@ def create_multitask_relation_circuit(_args, StackConfig, num_tasks):
     for i in range(num_tasks):
         cargs['t'+str(i)+'_logistic_regression_out_dim'] = 2
     if _args.verbose == 2:
-        print "\n", "Printing Configuration after StackConfig:"
+        print ("\n", "Printing Configuration after StackConfig:")
         print_args(cargs)
     return build_relation_obj_grad_and_classifier(_args, cargs, num_tasks)
 
@@ -553,9 +553,9 @@ def build_relation_obj_grad_and_classifier(_args, cargs, num_tasks):
 def print_args(args):
     for k in args:
         if type(args[k]) == dict or type(args[k]) == list or type(args[k]) == tuple:
-            print k, 'container size:', len(args[k])
+            print (k, 'container size:', len(args[k]))
         else:
-            print k, args[k]
+            print (k, args[k])
 
 def save_parameters(path, params):
     #savable_params={k : v.get_value() for k, v in params.items() }
@@ -567,7 +567,7 @@ def load_params(path, params):
         #print "loading parameters:", kk, "type:", type(vv)
     #if kk not in params:
     #    warnings.warn('%s is not in the archive' % kk)
-        print 'updating parameter:', kk
+        print ('updating parameter:', kk)
         params[kk]=pp[kk]
     return params
 

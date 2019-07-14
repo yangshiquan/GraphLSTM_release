@@ -1,5 +1,5 @@
 import theano.tensor as T
-from neural_lib import *
+from .neural_lib import *
 
 # Note: need to refactor many places to return regularizable params  lists for the optimization.
 
@@ -12,7 +12,7 @@ def calculate_params_needed(chips):
 ''' Automatically create(initialize) layers and hook them together'''
 def stackLayers(chips, current_chip, params, feature_size=0, entity_size=2):
     instantiated_chips = []
-    print 'stack layers!!!'
+    print ('stack layers!!!')
     for e in chips:
         previous_chip = current_chip
         if e[1].endswith('feature_emission_trans'):
@@ -22,20 +22,20 @@ def stackLayers(chips, current_chip, params, feature_size=0, entity_size=2):
         else:
             current_chip = e[0](e[1], params).prepend(previous_chip)
         instantiated_chips.append((current_chip, e[1]))
-        print 'current chip:', e[1], "In_dim:", current_chip.in_dim, "Out_dim:", current_chip.out_dim
-        print 'needed keys:'
+        print ('current chip:', e[1], "In_dim:", current_chip.in_dim, "Out_dim:", current_chip.out_dim)
+        print ('needed keys:')
         for e in current_chip.needed_key():
             print (e, params[e])
     return instantiated_chips 
 
 ''' Compute the initialized layers by feed in the inputs. '''
 def computeLayers(instantiated_chips, current_chip, params, feature_input=None, entities_input=None, mask=None):
-    print 'compute layers!!!'
+    print ('compute layers!!!')
     regularizable_params = []
     for e in instantiated_chips:
         previous_chip = current_chip
         current_chip = e[0]
-        print 'current chip:', e[1], "In_dim:", current_chip.in_dim, "Out_dim:", current_chip.out_dim
+        print ('current chip:', e[1], "In_dim:", current_chip.in_dim, "Out_dim:", current_chip.out_dim)
         if e[1].endswith('feature_emission_trans'):
             internal_params = current_chip.parameters
             current_chip.compute(previous_chip.output_tv, feature_input)
@@ -50,7 +50,7 @@ def computeLayers(instantiated_chips, current_chip, params, feature_input=None, 
             current_chip.compute(previous_chip.output_tv)
         assert current_chip.output_tv is not None
         for k in internal_params:
-            print 'internal_params:', k.name
+            print ('internal_params:', k.name)
             assert k.is_regularizable
             params[k.name] = k
             regularizable_params.append(k)
@@ -80,7 +80,7 @@ def RelationStackMaker(chips, params, graph=False, weighted=False, batched=False
             masks = None
     #print masks, type(masks), masks.ndim
     current_chip = Start(params['voc_size'], emb_input)  
-    print '\n', 'Building Stack now', '\n', 'Start: ', params['voc_size'], 'out_tv dim:', current_chip.output_tv.ndim
+    print ('\n', 'Building Stack now', '\n', 'Start: ', params['voc_size'], 'out_tv dim:', current_chip.output_tv.ndim)
     instantiated_chips = stackLayers(chips, current_chip, params, entity_size=params['num_entity'])
     regularizable_params = computeLayers(instantiated_chips, current_chip, params, entities_input=entities_tv, mask=masks)
     ### Debug use: Get the attention co-efficiency and visualize. ###
@@ -101,26 +101,26 @@ def RelationStackMaker(chips, params, graph=False, weighted=False, batched=False
             else None)
     # Show all parameters that would be needed in this system
     params_needed = calculate_params_needed(instantiated_chips)
-    print "Parameters Needed", params_needed
+    print ("Parameters Needed", params_needed)
     for k in params_needed:
         assert k in params, k
-        print k, params[k]
+        print (k, params[k])
     assert hasattr(current_chip, 'score')
     cost = current_chip.score #/ params['nsentences'] 
     cost_arr = [cost]
     for layer in instantiated_chips[:-1]:
         if hasattr(layer[0], 'score'):
-            print layer[1]
+            print (layer[1])
             cost += params['cost_coef'] * layer[0].score
             cost_arr.append(params['cost_coef'] * layer[0].score)
 
     grads = T.grad(cost,
             wrt=regularizable_params)
             #[params[k] for k in params if (hasattr(params[k], 'is_regularizable') and params[k].is_regularizable)])
-    print 'Regularizable parameters:'
+    print ('Regularizable parameters:')
     for k, v in params.items():
         if hasattr(v, 'is_regularizable'):
-            print k, v, v.is_regularizable
+            print (k, v, v.is_regularizable)
     if graph or batched:
         #return (emb_input, masks, entities_tv, attention_weights, entity_tvs, gold_y, pred_y, cost, grads, regularizable_params) 
         return (emb_input, masks, entities_tv, gold_y, pred_y, cost, grads, regularizable_params) 
@@ -156,7 +156,7 @@ def MultitaskRelationStackMaker(Shared, Classifiers, params, num_tasks, graph=Fa
             masks = None
     current_chip = Start(params['voc_size'], None) 
     instantiated_chips = stackLayers(Shared, current_chip, params)
-    print 'Building Classifiers for tasks, input dim:', current_chip.out_dim
+    print ('Building Classifiers for tasks, input dim:', current_chip.out_dim)
     pred_ys = []
     gold_ys = []
     costs_arr = []
@@ -195,10 +195,10 @@ def MultitaskRelationStackMaker(Shared, Classifiers, params, num_tasks, graph=Fa
     #global_regularizable_params = list(set(global_regularizable_params))
     #grads = T.grad(cost,
     #        wrt=global_regularizable_params)
-    print 'The joint model regularizable parameters:'
+    print ('The joint model regularizable parameters:')
     for k, v in params.items():
         if hasattr(v, 'is_regularizable'):
-            print k, v, v.is_regularizable
+            print (k, v, v.is_regularizable)
     #return (emb_inputs, entities_tv, gold_ys, pred_ys, costs_arr, cost, grads_arr, grads, regularizable_param_arr, global_regularizable_params)
     if batched or graph:
         return (emb_inputs, entities_tv, masks, gold_ys, pred_ys, costs_arr, grads_arr, regularizable_param_arr)

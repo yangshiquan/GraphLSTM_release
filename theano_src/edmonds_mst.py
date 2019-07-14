@@ -70,7 +70,7 @@ def quick_parse(infile):
         for k,v in line_dict.iteritems():
             for to, weight in v.iteritems():
                 graph.append(Arc(to, weight, k))
-        print min_spanning_arborescence(graph, 3)
+        print(min_spanning_arborescence(graph, 3))
 
 if __name__ == '__main__':
     import sys

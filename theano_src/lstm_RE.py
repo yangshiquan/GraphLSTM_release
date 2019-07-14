@@ -4,11 +4,11 @@ import argparse, os, random, subprocess, sys, time
 import theano, numpy
 import theano.tensor as T
 from copy import copy
-from neural_lib import StackConfig, ArrayInit
-from neural_architectures import CNNRelation, LSTMRelation, LSTMRelation_multitask, GraphLSTMRelation, WeightedGraphLSTMRelation, WeightedAddGraphLSTMRelation, WeightedGraphLSTMRelation_multitask, WeightedAddGraphLSTMRelation_multitask
-from train_util import dict_from_argparse, shuffle, create_relation_circuit, convert_id_to_word, add_arg, add_arg_to_L, conv_data_graph, create_multitask_relation_circuit 
-from train_util import sgd, adadelta, rmsprop, read_matrix_from_gzip, read_matrix_from_file, read_matrix_and_idmap_from_file, batch_run_func, get_minibatches_idx, save_parameters, load_params
-from data_process import load_data, load_data_cv, prepare_data 
+from .neural_lib import StackConfig, ArrayInit
+from .neural_architectures import CNNRelation, LSTMRelation, LSTMRelation_multitask, GraphLSTMRelation, WeightedGraphLSTMRelation, WeightedAddGraphLSTMRelation, WeightedGraphLSTMRelation_multitask, WeightedAddGraphLSTMRelation_multitask
+from .train_util import dict_from_argparse, shuffle, create_relation_circuit, convert_id_to_word, add_arg, add_arg_to_L, conv_data_graph, create_multitask_relation_circuit
+from .train_util import sgd, adadelta, rmsprop, read_matrix_from_gzip, read_matrix_from_file, read_matrix_and_idmap_from_file, batch_run_func, get_minibatches_idx, save_parameters, load_params
+from .data_process import load_data, load_data_cv, prepare_data
 from theano.tensor.nnet import sigmoid
 from theano.tensor import tanh
 
@@ -67,7 +67,7 @@ def predict(_args, lex_test, idxs_test, f_classify, groundtruth_test, batchsize=
                     predictions_test.append(f_classify(word, dep[i].sum(axis=-1), *idxs))  #.sum(axis=-1) 
             else:
                 predictions_test.append(f_classify(word, *idxs))
-    print 'in predict,', len(predictions_test), len(groundtruth_test)
+    print ('in predict,', len(predictions_test), len(groundtruth_test))
     if print_prediction:
         pred_file.close()
     #results = eval_logitReg_F1(predictions_test, groundtruth_test) 
@@ -156,8 +156,8 @@ def train_single(train_lex, train_idxs, train_y, _args, f_cost, f_update, epoch_
             else:
                 aggregate_cost += train_instance(words, idxs, label, learning_rate, f_cost, f_update)
             if _args.verbose == 2 and i % 10 == 0:
-                print '[learning] epoch %i >> %2.2f%%' % (epoch_id, (i + 1) * 100. / nsentences),
-                print 'completed in %.2f (sec). << avg loss: %.2f <<\r' % (time.time() - tic, aggregate_cost/(i+1)),
+                print ('[learning] epoch %i >> %2.2f%%' % (epoch_id, (i + 1) * 100. / nsentences),)
+                print ('completed in %.2f (sec). << avg loss: %.2f <<\r' % (time.time() - tic, aggregate_cost/(i+1)),)
                 sys.stdout.flush()
     # Mini-batch
     else:
@@ -182,19 +182,19 @@ def train_single(train_lex, train_idxs, train_y, _args, f_cost, f_update, epoch_
             else:
                 aggregate_cost += train_batch(x, masks.sum(axis=-1), eidxs, labels, learning_rate, f_cost, f_update)
             if _args.verbose == 2 :
-                print '[learning] epoch %i >> %2.2f%%' % (epoch_id, (i + 1) * 100. / nbatches),
-                print 'completed in %.2f (sec). << avg loss: %.2f <<\r' % (time.time() - tic, aggregate_cost/(i+1)),
+                print ('[learning] epoch %i >> %2.2f%%' % (epoch_id, (i + 1) * 100. / nbatches),)
+                print ('completed in %.2f (sec). << avg loss: %.2f <<\r' % (time.time() - tic, aggregate_cost/(i+1)),)
                 #print 'completed in %.2f (sec). << avg loss: %.2f <<%%' % (time.time() - tic, aggregate_cost/(i+1)),
                 #print 'average cost for each part: (%.2f, %.2f) <<\r' %(temp_cost_arr[0]/(i+1), temp_cost_arr[1]/(i+1)),
                 sys.stdout.flush()
     if _args.verbose == 2:
-        print '\n>> Epoch completed in %.2f (sec) <<' % (time.time() - tic), 'training cost: %.2f' % (aggregate_cost)
+        print ('\n>> Epoch completed in %.2f (sec) <<' % (time.time() - tic), 'training cost: %.2f' % (aggregate_cost))
 
 
 ''' For training on multi-task setting, both batch and non-batch version'''
 def train_alternative(_args, f_costs_and_updates, epoch_id, learning_rate_arr, nsentences_arr, words_arr, label_arr, idx_arr, dep_mask_arr, batch_size):
     num_tasks = len(f_costs_and_updates)
-    print 'num_tasks:', num_tasks
+    print ('num_tasks:', num_tasks)
     for i in range(num_tasks):
         f_cost, f_update = f_costs_and_updates[i]
         nsent = nsentences_arr[i]
@@ -228,7 +228,7 @@ def prepare_corpus(_args):
     _args.y_dim = len(_args.label2idx)
     if 'arcs2idx' in _args.dicts:
         _args.lstm_arc_types = len(_args.dicts['arcs2idx'])
-        print 'lstm arc types =', _args.lstm_arc_types
+        print ('lstm arc types =', _args.lstm_arc_types)
     #del _args.dicts
     #_args.groundtruth_valid = convert_id_to_word(_args.valid_set[-1], _args.idx2label)
     #_args.groundtruth_test = convert_id_to_word(_args.test_set[-1], _args.idx2label)
@@ -236,9 +236,9 @@ def prepare_corpus(_args):
     eval_args(_args)
     _args.lstm_go_backwards = True #False
     try:
-        print 'Circuit:', _args.circuit.__name__
-        print 'Chkpt1', len(_args.label2idx), _args.nsentences, _args.train_set[1][0], _args.voc_size, _args.train_set[2][0], _args.valid_set[1][0], _args.valid_set[2][0]
-        print 'Chkpt2', _args.wemb1_T_initializer.matrix.shape, _args.wemb1_T_initializer.matrix[0]
+        print ('Circuit:', _args.circuit.__name__)
+        print ('Chkpt1', len(_args.label2idx), _args.nsentences, _args.train_set[1][0], _args.voc_size, _args.train_set[2][0], _args.valid_set[1][0], _args.valid_set[2][0])
+        print ('Chkpt2', _args.wemb1_T_initializer.matrix.shape, _args.wemb1_T_initializer.matrix[0])
     except AttributeError:
         pass
 
@@ -247,14 +247,14 @@ def compile_circuit(_args):
     ### build circuits. ###
     (_args.f_cost, _args.f_update, _args.f_classify, cargs) = create_relation_circuit(_args, StackConfig)
     _args.train_func = train_single
-    print "Finished Compiling"
+    print ("Finished Compiling")
     return cargs
 
 def convert_args(_args, prefix):
-    from types import StringType
+    from types import *
     for a in _args.__dict__:  #TOPO_PARAM + TRAIN_PARAM:
         try:
-            if type(a) is StringType and a.startswith(prefix):
+            if type(a) is str and a.startswith(prefix):
                 _args.__dict__[a[len(prefix)+1:]] = _args.__dict__[a]
                 del _args.__dict__[a]
         except:
@@ -323,7 +323,7 @@ def run_epochs(_args, test_data=True):
                 res_test, _ = predict(_args, test_lex, test_idxs, _args.f_classify, test_y, _args.batch_size, _args.graph, test_dep, _args.weighted, _args.print_prediction, _args.prediction_file)
                 # get the prediction, convert and write to concrete.
                 param['tf1'] = res_test
-                print '\nEpoch:%d'%param['be'], 'Test accuracy:', res_test, '\n'        
+                print ('\nEpoch:%d'%param['be'], 'Test accuracy:', res_test, '\n')
                 ############## Test load parameters!!!! ########
                 #cargs = {}
                 #print "loading parameters!"
@@ -333,12 +333,12 @@ def run_epochs(_args, test_data=True):
                 #print 'Load parameter test accuracy:', res_test, '\n'        
                 ############## End Test ##############
         if _args.decay and (param['epoch_id'] - param['last_decay']) >= _args.decay_epochs:
-            print 'learning rate decay at epoch', param['epoch_id'], '! Previous best epoch number:', param['be']
+            print ('learning rate decay at epoch', param['epoch_id'], '! Previous best epoch number:', param['be'])
             param['last_decay'] = param['epoch_id']
             param['clr'] *= 0.5
         # If learning rate goes down to minimum then break.
         if param['clr'] < _args.minimum_lr:
-            print "\nLearning rate became too small, breaking out of training"
+            print ("\nLearning rate became too small, breaking out of training")
             break
     print('BEST RESULT: epoch', param['be'],
           'valid accuracy', param['vf1'],
@@ -396,17 +396,17 @@ def run_multi_task(_args, cargs, num_domains, num_tasks, mode='alternative', tes
                     if _args.verbose:
                         print('test F1'   , pred_res)
             if _args.decay and (param['epoch_id'] - param['last_decay'+str(i)]) >= args.decay_epochs:
-                print 'learning rate decay at epoch', param['epoch_id'], ', for dataset', i, '! Previous best epoch number:', param['be'+str(i)], 'current learning rates:', _args.lr_arr
+                print ('learning rate decay at epoch', param['epoch_id'], ', for dataset', i, '! Previous best epoch number:', param['be'+str(i)], 'current learning rates:', _args.lr_arr)
                 param['last_decay'+str(i)] = param['epoch_id']
                 _args.lr_arr[i] *= 0.5
             # If learning rate goes down to minimum then break.
             if _args.lr_arr[i] < args.minimum_lr: 
-                print "\nNER Learning rate became too small, breaking out of training"
+                print ("\nNER Learning rate became too small, breaking out of training")
                 break
     for i in range(num_domains*num_tasks):
-        print 'DATASET', i, 'BEST RESULT: epoch', param['be'+str(i)], 'valid F1', param['vf1'+str(i)],
+        print ('DATASET', i, 'BEST RESULT: epoch', param['be'+str(i)], 'valid F1', param['vf1'+str(i)],)
         if test_data:
-            print 'best test F1', param['tf1'+str(i)]
+            print ('best test F1', param['tf1'+str(i)])
 
         
 def prepare_params_shareLSTM(_args):
@@ -415,26 +415,26 @@ def prepare_params_shareLSTM(_args):
     # Do not load data if we want to debug topology
     _args.voc_size = len(_args.global_word_map)
     #_args.idx2word = dict((k, v) for v, k in _args.global_word_map.iteritems())
-    print 'sentence size array:', _args.nsentences_arr
+    print ('sentence size array:', _args.nsentences_arr)
     #_args.nsentences = min(nsentences_arr) 
     _args.wemb1_win = _args.win_r - _args.win_l + 1
     _args.lstm_go_backwards = False
     #del _args.global_word_map
     eval_args(_args)
-    print 'Chkpt1: datasets label sizes:',
-    print [len(label_dict) for label_dict in _args.idx2label_dicts],
-    print 'training datasets size:',
-    print [len(ds[0]) for ds in _args.trainSet],
-    print 'vocabulary size:', _args.voc_size 
+    print ('Chkpt1: datasets label sizes:',)
+    print ([len(label_dict) for label_dict in _args.idx2label_dicts],)
+    print ('training datasets size:',)
+    print ([len(ds[0]) for ds in _args.trainSet],)
+    print ('vocabulary size:', _args.voc_size)
 
 
 def combine_word_dicts(dict1, dict2):
-    print 'the size of the two dictionaries are:', len(dict1), len(dict2)
+    print ('the size of the two dictionaries are:', len(dict1), len(dict2))
     combine_dict = dict1.copy()
     for k, v in dict2.items():
         if k not in combine_dict:
             combine_dict[k] = len(combine_dict)
-    print 'the size of the combined dictionary is:', len(combine_dict)
+    print ('the size of the combined dictionary is:', len(combine_dict))
     return combine_dict 
 
 
@@ -463,17 +463,17 @@ def load_all_data_multitask(_args):
     for ds in dataSets:
         _args.global_word_map = combine_word_dicts(_args.global_word_map, ds[-1]['words2idx']) 
     if _args.emb_dir != 'RANDOM':
-        print 'started loading embeddings from file', _args.emb_dir        
+        print ('started loading embeddings from file', _args.emb_dir)
         M_emb, _ = read_matrix_from_file(_args.emb_dir, _args.global_word_map) 
-        print 'global map size:', len(M_emb), len(_args.global_word_map)
+        print ('global map size:', len(M_emb), len(_args.global_word_map))
         ## load pretrained embeddings
         _args.emb_matrix = theano.shared(M_emb, name='emb_matrix')
         _args.emb_dim = len(M_emb[0])
         _args.wemb1_out_dim = _args.emb_dim
         if _args.fine_tuning :
-            print 'fine tuning!!!!!'
+            print ('fine tuning!!!!!')
             _args.emb_matrix.is_regularizable = True
-    print 'loading data dataset map:', dataset_map
+    print ('loading data dataset map:', dataset_map)
     return dataSets, lr_arr, dataset_map
 
 ### convert the old word idx to the new one ###
@@ -489,15 +489,15 @@ def data_prep_shareLSTM(_args):
     dataSets, _args.lr_arr, dataset_map = load_all_data_multitask(_args)
     if 'arcs2idx' in dataSets[0][-1]:
         _args.lstm_arc_types = len(dataSets[0][-1]['arcs2idx'])
-        print 'lstm arc types =', _args.lstm_arc_types
+        print ('lstm arc types =', _args.lstm_arc_types)
     ## re-map words in the news cws dataset
     idx2word_dicts = [dict((k, v) for v, k in ds[-1]['words2idx'].iteritems()) for ds in dataSets]
     _args.idx2label_dicts = [dict((k, v) for v, k in ds[-1]['labels2idx'].iteritems()) for ds in dataSets]
     for i, ds in enumerate(dataSets):
         # ds structure: train_set, valid_set, test_set, dicts
-        print len(ds[0]), len(ds[0][0][-1]), ds[0][1][-1], ds[0][2][-1]
-        print len(ds[1]), len(ds[1][0][-1]), ds[1][1][-1], ds[1][2][-1]
-        print len(ds[2]), len(ds[2][0][-1]), ds[2][1][-1], ds[2][2][-1]
+        print (len(ds[0]), len(ds[0][0][-1]), ds[0][1][-1], ds[0][2][-1])
+        print (len(ds[1]), len(ds[1][0][-1]), ds[1][1][-1], ds[1][2][-1])
+        print (len(ds[2]), len(ds[2][0][-1]), ds[2][1][-1], ds[2][2][-1])
         ds[0][0], ds[1][0], ds[2][0] = batch_run_func((ds[0][0], ds[1][0], ds[2][0]), convert_word_idx, idx2word_dicts[i], _args.global_word_map)
         ## convert word, feature and label for array to numpy array
         ds[0], ds[1], ds[2] = batch_run_func((ds[0], ds[1], ds[2]), conv_data_graph, _args.win_l, _args.win_r)
@@ -519,15 +519,15 @@ def check_input(dataset, voc_size):
             try:
             	assert numpy.all(numpy.array(ii) < sent_len) and numpy.all(ii > -1)
             except:
-                print 'abnormal index:', ii, 'at instance', i, 'sentence length:', sent_len
+                print ('abnormal index:', ii, 'at instance', i, 'sentence length:', sent_len)
         try:
             assert (y == 0 or y == 1)
         except:
-            print 'abnormal label:', y
+            print ('abnormal label:', y)
         try:
             assert numpy.all(numpy.array(x) < voc_size)
         except:
-            print 'abnormal input:', x
+            print ('abnormal input:', x)
 
 def run_wild_test(_args):
     _args.rng = numpy.random.RandomState(_args.seed)
@@ -541,25 +541,25 @@ def run_wild_test(_args):
     _args.train_set, _args.valid_set, _args.test_set, _args.dicts = _args.loaddata(_args.train_path, _args.valid_path, num_entities=_args.num_entity, dep=_args.graph, train_dep=_args.train_graph, valid_dep=_args.valid_graph, add=_args.add)
     # convert the data from array to numpy arrays
     _args.train_set, _args.valid_set, _args.test_set = batch_run_func((_args.train_set, _args.valid_set, _args.test_set), conv_data_graph, _args.win_l, _args.win_r)
-    print 'word dict size:', len(_args.dicts['words2idx'])
-    print 'checking training data!'
+    print ('word dict size:', len(_args.dicts['words2idx']))
+    print ('checking training data!')
     check_input(_args.train_set[:3], len(_args.dicts['words2idx']))
-    print 'checking test data!'
+    print ('checking test data!')
     check_input(_args.valid_set[:3], len(_args.dicts['words2idx']))
-    print 'finish check inputs!!!'
+    print ('finish check inputs!!!')
     word2idx = _args.dicts['words2idx']
     prepare_corpus(_args)
     if _args.emb_dir != 'RANDOM':
-        print 'started loading embeddings from file', _args.emb_dir        
+        print ('started loading embeddings from file', _args.emb_dir)
         M_emb, _ = read_matrix_from_file(_args.emb_dir, word2idx) 
         #M_emb, _ = read_matrix_from_gzip(_args.emb_dir, word2idx) 
-        print 'global map size:', len(M_emb) #, count, 'of them are initialized from glove'
+        print ('global map size:', len(M_emb)) #, count, 'of them are initialized from glove'
         emb_var = theano.shared(M_emb, name='emb_matrix')
         _args.emb_matrix = emb_var
         _args.emb_dim = len(M_emb[0])
         _args.wemb1_out_dim = _args.emb_dim
         if _args.fine_tuning :
-            print 'fine tuning!!!!!'
+            print ('fine tuning!!!!!')
             _args.emb_matrix.is_regularizable = True
     run_wild_prediction(_args) 
 
@@ -579,27 +579,27 @@ def run_single_corpus(_args):
     _args.train_set, _args.valid_set, _args.test_set, _args.dicts = _args.loaddata(_args.data_dir, _args.total_fold, _args.dev_fold, _args.test_fold, num_entities=_args.num_entity, dep=_args.graph, content_fname=_args.content_file, dep_fname=_args.dependent_file, add=_args.add)
     # convert the data from array to numpy arrays
     _args.train_set, _args.valid_set, _args.test_set = batch_run_func((_args.train_set, _args.valid_set, _args.test_set), conv_data_graph, _args.win_l, _args.win_r)
-    print 'word dict size:', len(_args.dicts['words2idx'])
-    print 'checking training data!'
+    print ('word dict size:', len(_args.dicts['words2idx']))
+    print ('checking training data!')
     check_input(_args.train_set[:3], len(_args.dicts['words2idx']))
-    print 'checking test data!'
+    print ('checking test data!')
     check_input(_args.valid_set[:3], len(_args.dicts['words2idx']))
-    print 'finish check inputs!!!'
+    print ('finish check inputs!!!')
     word2idx = _args.dicts['words2idx']
     prepare_corpus(_args)
     #for k, v in word2idx.iteritems():
     #    print k, v
     if _args.emb_dir != 'RANDOM':
-        print 'started loading embeddings from file', _args.emb_dir        
+        print ('started loading embeddings from file', _args.emb_dir)
         M_emb, _ = read_matrix_from_file(_args.emb_dir, word2idx) 
         #M_emb, _ = read_matrix_from_gzip(_args.emb_dir, word2idx) 
-        print 'global map size:', len(M_emb) #, count, 'of them are initialized from glove'
+        print ('global map size:', len(M_emb)) #, count, 'of them are initialized from glove'
         emb_var = theano.shared(M_emb, name='emb_matrix')
         _args.emb_matrix = emb_var
         _args.emb_dim = len(M_emb[0])
         _args.wemb1_out_dim = _args.emb_dim
         if _args.fine_tuning :
-            print 'fine tuning!!!!!'
+            print ('fine tuning!!!!!')
             _args.emb_matrix.is_regularizable = True
     run_epochs(_args) 
 
@@ -614,7 +614,7 @@ def run_corpora_multitask(_args):
     data_prep_shareLSTM(_args)
     prepare_params_shareLSTM(_args)
     _args.f_costs_and_updates, _args.f_classifies, cargs = create_multitask_relation_circuit(_args, StackConfig, len(_args.trainSet))
-    print "Finished Compiling"
+    print ("Finished Compiling")
     run_multi_task(_args, cargs, 1, len(_args.trainSet), mode=_args.train_mode) #, test_data=True)
 
 
