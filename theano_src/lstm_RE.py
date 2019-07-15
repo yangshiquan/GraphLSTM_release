@@ -4,13 +4,14 @@ import argparse, os, random, subprocess, sys, time
 import theano, numpy
 import theano.tensor as T
 from copy import copy
-from .neural_lib import StackConfig, ArrayInit
-from .neural_architectures import CNNRelation, LSTMRelation, LSTMRelation_multitask, GraphLSTMRelation, WeightedGraphLSTMRelation, WeightedAddGraphLSTMRelation, WeightedGraphLSTMRelation_multitask, WeightedAddGraphLSTMRelation_multitask
-from .train_util import dict_from_argparse, shuffle, create_relation_circuit, convert_id_to_word, add_arg, add_arg_to_L, conv_data_graph, create_multitask_relation_circuit
-from .train_util import sgd, adadelta, rmsprop, read_matrix_from_gzip, read_matrix_from_file, read_matrix_and_idmap_from_file, batch_run_func, get_minibatches_idx, save_parameters, load_params
-from .data_process import load_data, load_data_cv, prepare_data
+from neural_lib import StackConfig, ArrayInit
+from neural_architectures import CNNRelation, LSTMRelation, LSTMRelation_multitask, GraphLSTMRelation, WeightedGraphLSTMRelation, WeightedAddGraphLSTMRelation, WeightedGraphLSTMRelation_multitask, WeightedAddGraphLSTMRelation_multitask
+from train_util import dict_from_argparse, shuffle, create_relation_circuit, convert_id_to_word, add_arg, add_arg_to_L, conv_data_graph, create_multitask_relation_circuit
+from train_util import sgd, adadelta, rmsprop, read_matrix_from_gzip, read_matrix_from_file, read_matrix_and_idmap_from_file, batch_run_func, get_minibatches_idx, save_parameters, load_params
+from data_process import load_data, load_data_cv, prepare_data
 from theano.tensor.nnet import sigmoid
 from theano.tensor import tanh
+from types import *
 
 
 ''' Convert the entity index: from indexing to dense-vector(but many zero entries) multiplication.'''
@@ -251,7 +252,6 @@ def compile_circuit(_args):
     return cargs
 
 def convert_args(_args, prefix):
-    from types import *
     for a in _args.__dict__:  #TOPO_PARAM + TRAIN_PARAM:
         try:
             if type(a) is str and a.startswith(prefix):
@@ -620,7 +620,6 @@ def run_corpora_multitask(_args):
 
 def create_arg_parser(args=None):
     _arg_parser = argparse.ArgumentParser(description='LSTM')
-    add_arg.arg_parser = _arg_parser
     add_arg('--setting'        , 'run_single_corpus', help='Choosing between running single corpus or multi-task')
     ## File IO
     # For single task
@@ -702,6 +701,7 @@ if __name__ == "__main__":
     TRAIN_PARAM = []
     _arg_parser = create_arg_parser()
     args = _arg_parser.parse_args()
-    #run_wild_test(args)
-    #run_corpora_multitask(args)
+    # run_wild_test(args)
+    # run_corpora_multitask(args)
+    print(args.setting)
     eval(args.setting)(args)

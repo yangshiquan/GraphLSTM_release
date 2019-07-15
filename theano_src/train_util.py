@@ -15,7 +15,7 @@ import random
 import warnings
 import pickle as pickle
 from theano import config
-from .neural_lib import ArrayInit
+from neural_lib import ArrayInit
 
 def np_floatX(data):
     return np.asarray(data, dtype=config.floatX)
@@ -232,7 +232,7 @@ def conv_data(corpus, win_l, win_r):
         npidx = []
         for ii in idx:
             npidx.append(np.array(ii).astype('int32'))
-	idxv.append(npidx)
+    idxv.append(npidx)
     assert len(lexv) == len(idxv)
     assert len(lexv) == len(temp_y)
     return [lexv, temp_y, idxv]
@@ -249,7 +249,7 @@ def conv_data_graph(corpus, win_l, win_r):
         npidx = []
         for ii in idx:
             npidx.append(np.array(ii).astype('int32'))
-	idxv.append(npidx)
+    idxv.append(npidx)
     assert len(lexv) == len(idxv)
     assert len(lexv) == len(temp_y)
     return [lexv, temp_y, idxv, temp_dep]

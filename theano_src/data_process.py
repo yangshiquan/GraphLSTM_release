@@ -7,7 +7,7 @@ import re, sys, os
 import numpy
 import theano
 from collections import defaultdict
-from .edmonds_mst import * #edmonds import mst
+from edmonds_mst import * #edmonds import mst
 
 OOV = '_OOV_'
 SEG = 'Segmentation'
@@ -946,6 +946,7 @@ def load_data(train_path=None, valid_path=None, test_path=None, num_entities=2, 
     arc_type_dict = dict()
     # load training data
     #train_corpus = read_file(os.path.join(train_path, content_fname+'.train'), num_entities)
+    # print("train_path:"+train_path+"\n")
     train_corpus = read_file(train_path, num_entities)
     if dep:
         assert train_dep is not None
@@ -1029,4 +1030,4 @@ if __name__ == '__main__':
     train, valid, test, dics = load_data(train_path=sys.argv[1], valid_path=sys.argv[2], test_path=sys.argv[3])
     idx2word = dict((k, v) for v, k in dics['words2idx'].iteritems())
     for k,v in idx2word.iteritems():
-	print (k,v)
+        print (k,v)

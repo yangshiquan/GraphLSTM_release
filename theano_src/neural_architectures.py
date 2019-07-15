@@ -1,5 +1,5 @@
 import theano.tensor as T
-from .neural_lib import *
+from neural_lib import *
 
 # Note: need to refactor many places to return regularizable params  lists for the optimization.
 
