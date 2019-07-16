@@ -701,7 +701,6 @@ if __name__ == "__main__":
     TRAIN_PARAM = []
     _arg_parser = create_arg_parser()
     args = _arg_parser.parse_args()
-    # run_wild_test(args)
-    # run_corpora_multitask(args)
-    print(args.setting)
+    run_wild_test(args)
+    #run_corpora_multitask(args)
     eval(args.setting)(args)

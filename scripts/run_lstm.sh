@@ -1,6 +1,7 @@
 #!/bin/bash
 
-LOCAL_HOME=/User/shiquan/PycharmProjects/GraphLSTM_release  # where the theano_src directory reside
+#LOCAL_HOME=/User/shiquan/PycharmProjects/GraphLSTM_release  # where the theano_src directory reside
+LOCAL_HOME=/home/yimeng/shiquan/GraphLSTM_release  # where the theano_src directory reside
 
 cd ${LOCAL_HOME}
 
